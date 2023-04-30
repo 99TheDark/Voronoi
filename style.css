@@ -1,0 +1,16 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    min-width: 100vw;
+    min-height: 100vh;
+    padding: 0px;
+    margin: 0px;
+}
+
+#canvas {
+    position: absolute;
+    inset: 0px;
+    background-color: black;
+}

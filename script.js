@@ -118,7 +118,7 @@ const main = function(vertexSource, fragmentSource) {
     var draw = function() {
         const pointsUniformLocation = gl.getUniformLocation(program, "points");
         gl.uniform2fv(pointsUniformLocation, new Float32Array(points.map((point, i) => {
-            if(i % 2 == 1) point += 0.15 * Math.sin(performance.now() / 800);
+            if(i > 2 && i % 2 == 1) point += 0.15 * Math.sin(performance.now() / 800);
             return point;
         })));
 

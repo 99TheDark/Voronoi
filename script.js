@@ -31,18 +31,19 @@ const main = function(vertexSource, fragmentSource) {
     const colors = [];
     const size = 8;
 
-    for(let j = 0; j < size; j++) {
-        for(let i = 0; i < size; i++) {
-            points.push(Math.random() + i);
-            points.push(Math.random() + j);
+    var generate = (i, j) => {
+        points.push(Math.random() + i);
+        points.push(Math.random() + j);
 
-            colors.push(Math.random());
-            colors.push(Math.random());
-            colors.push(Math.random());
-        }
-    }
+        colors.push(Math.random());
+        colors.push(Math.random());
+        colors.push(Math.random());
+    };
 
-    fragmentSource = fragmentSource.replaceAll("NUM_POINTS", size * size);
+    generate(-5, -5);
+    for(let j = 0; j < size; j++) for(let i = 0; i < size; i++) generate(i, j);
+
+    fragmentSource = fragmentSource.replaceAll("NUM_POINTS", size * size + 1);
 
     const vertex = gl.createShader(gl.VERTEX_SHADER);
     const fragment = gl.createShader(gl.FRAGMENT_SHADER);
@@ -71,7 +72,7 @@ const main = function(vertexSource, fragmentSource) {
     gl.validateProgram(program);
     if(!gl.getProgramParameter(program, gl.VALIDATE_STATUS))
         throw "Error validating program.\n\n" + gl.getProgramInfoLog(program);
-    
+
     gl.useProgram(program);
 
     const position = gl.createBuffer();
@@ -105,26 +106,43 @@ const main = function(vertexSource, fragmentSource) {
     gl.enableVertexAttribArray(posAttribLocation);
     gl.enableVertexAttribArray(uvAttribLocation);
 
-    const pointsUniformLocation = gl.getUniformLocation(program, "points");
-    gl.uniform2fv(pointsUniformLocation, new Float32Array(points));
+    const mag = Math.sqrt(canvas.width * canvas.width + canvas.height * canvas.height);
 
-    const colorsUniformLocation = gl.getUniformLocation(program, "colors");
-    gl.uniform3fv(colorsUniformLocation, new Float32Array(colors));
+    canvas.addEventListener("mousemove", e => {
+        let rect = canvas.getBoundingClientRect();
 
-    const aspectUniformLocation = gl.getUniformLocation(program, "aspect");
-    let mag = Math.sqrt(canvas.width * canvas.width + canvas.height * canvas.height);
-    gl.uniform2f(aspectUniformLocation, canvas.width / mag, canvas.height / mag);
+        points[0] = (e.clientX - rect.left) / innerWidth * (canvas.width / mag) * size;
+        points[1] = (1 - (e.clientY - rect.top) / innerHeight) * (canvas.height / mag) * size;
+    });
 
-    const zoomUniformLocation = gl.getUniformLocation(program, "zoom");
-    gl.uniform1f(zoomUniformLocation, size);
+    var draw = function() {
+        const pointsUniformLocation = gl.getUniformLocation(program, "points");
+        gl.uniform2fv(pointsUniformLocation, new Float32Array(points.map((point, i) => {
+            if(i % 2 == 1) point += 0.15 * Math.sin(performance.now() / 800);
+            return point;
+        })));
 
-    gl.clearColor(0.5, 0.0, 0.0, 1.0);
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+        const colorsUniformLocation = gl.getUniformLocation(program, "colors");
+        gl.uniform3fv(colorsUniformLocation, new Float32Array(colors));
 
-    gl.drawElements(
-        gl.TRIANGLES,
-        indices.length,
-        gl.UNSIGNED_SHORT,
-        0
-    );
+        const aspectUniformLocation = gl.getUniformLocation(program, "aspect");
+        gl.uniform2f(aspectUniformLocation, canvas.width / mag, canvas.height / mag);
+
+        const zoomUniformLocation = gl.getUniformLocation(program, "zoom");
+        gl.uniform1f(zoomUniformLocation, size);
+
+        gl.clearColor(0.5, 0.0, 0.0, 1.0);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+        gl.drawElements(
+            gl.TRIANGLES,
+            indices.length,
+            gl.UNSIGNED_SHORT,
+            0
+        );
+
+        requestAnimationFrame(draw);
+    };
+
+    draw();
 };

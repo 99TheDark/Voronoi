@@ -41,9 +41,9 @@ const main = function(vertexSource, fragmentSource) {
     };
 
     generate(-5, -5);
-    for(let j = 0; j < size; j++) for(let i = 0; i < size; i++) generate(i, j);
+    for(let j = -1; j <= size; j++) for(let i = -1; i <= size; i++) generate(i, j);
 
-    fragmentSource = fragmentSource.replaceAll("NUM_POINTS", size * size + 1);
+    fragmentSource = fragmentSource.replaceAll("NUM_POINTS", (size + 1) * (size + 1) + 1);
 
     const vertex = gl.createShader(gl.VERTEX_SHADER);
     const fragment = gl.createShader(gl.FRAGMENT_SHADER);
